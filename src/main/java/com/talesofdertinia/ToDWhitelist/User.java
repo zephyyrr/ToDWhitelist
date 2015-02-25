@@ -17,6 +17,12 @@ public class User implements Serializable {
 		whitelisted = false;
 		blacklisted = false;
 	}
+	
+	public User(UUID uuid, boolean white, boolean black) {
+		this.uuid = uuid;
+		this.whitelisted = white;
+		this.blacklisted = black;
+	}
 
 	public OfflinePlayer getPlayer() {
 		return Bukkit.getOfflinePlayer(uuid);

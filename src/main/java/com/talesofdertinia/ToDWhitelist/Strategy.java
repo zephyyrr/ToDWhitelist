@@ -1,5 +1,7 @@
 package com.talesofdertinia.ToDWhitelist;
 
+import org.bukkit.World;
+
 public interface Strategy {
 	
 	/**
@@ -7,4 +9,5 @@ public interface Strategy {
 	 * @return true if allowed. False otherwise.
 	 */
 	boolean isAllowed(User user);
+	boolean isAllowed(User u, World world);
 }

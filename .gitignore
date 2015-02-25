@@ -1,4 +1,5 @@
 *.class
 *.jar
-build/*
-bin/*
+build
+bin
+.gradle
