@@ -1,0 +1,6 @@
+name: ToDWhitelist
+mainclass: com.talesofdertinia.ToDWhitelist.ToDWhitelist
+
+commands:
+  whitelist:
+    usage: /whitelist [add|remove]<player>
