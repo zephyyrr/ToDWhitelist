@@ -2,6 +2,8 @@ package com.talesofdertinia.ToDWhitelist;
 
 import org.bukkit.World;
 
+import com.talesofdertinia.ToDWhitelist.User.Status;
+
 public interface Strategy {
 	
 	/**
@@ -10,4 +12,6 @@ public interface Strategy {
 	 */
 	boolean isAllowed(User user);
 	boolean isAllowed(User u, World world);
+	
+	Status getInviteStatus();
 }
