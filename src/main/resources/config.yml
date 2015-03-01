@@ -1,0 +1,25 @@
+datastore:
+  type: mysql
+  url: jdbc:mysql://localhost
+  user: bukkit
+  password: password
+  table: user_data
+  
+kickmessage: "You are not on the whitelist. Please sign up at http://www.talesofdertinia.com"
+
+mail.username: info@domain.com
+mail.password: passowrd
+mail.host: mail.domain.com
+mail.port: 587
+
+mail.subject: Invitation to Tales of Dertinia
+mail.message: >
+  <h2>Dear %invited%</h2>
+  <p>
+    You have been invited to join Tales of Dertinia by %inviter%.
+  <p>
+  
+  <p>
+    Join us at <a href="play.talesofdertinia.com">play.talesofdertinia.com</a><br>
+    For more information, see <a href="http://talesofdertinia.com">http://talesofdertinia.com</a>
+  </p>
