@@ -1,8 +1,10 @@
 package com.talesofdertinia.ToDWhitelist;
 
-import org.bukkit.Bukkit;
+import java.util.logging.Logger;
+
+import com.talesofdertinia.ToDWhitelist.db.*;
+
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -12,28 +14,43 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 
 public class ToDWhitelist extends JavaPlugin implements Listener {
-	Database db;
-	Strategy strategy;
+	static Logger logger;
+	static Database db;
 	
+	Strategy strategy;
+
 	@Override
 	public void onEnable() {
+		logger = getLogger();
+
+		getConfig().options().copyDefaults(true);
+		saveConfig();
+
 		strategy = new WhitelistStrategy();
-		
+
 		ConfigurationSection ds_config = getConfig().getConfigurationSection("datastore");
 		DatabaseFactory.Settings settings = new DatabaseFactory.Settings(ds_config);
 		try {
-			db = DatabaseFactory.createInstance(this, ds_config.getString("type", "bukkit"), settings);
+			db = DatabaseFactory.createInstance(this, ds_config.getString("type", "mysql"), settings);
 		} catch (Exception e) {
 			getLogger().severe("Unable to establish connection to database.\n" +
-					settings.location);
-			
+					settings);
+
 			this.getPluginLoader().disablePlugin(this);
 			return;
 		}
-		
+
+		getCommand(UserControlCommand.getCommandString()).setExecutor(new UserControlCommand());
+		getCommand(InviteCommand.getCommandString()).setExecutor(new InviteCommand(this));
 		getServer().getPluginManager().registerEvents(this, this);
 	}
-	
+
+	@Override
+	public void onDisable() {
+		db = null;
+		strategy = null;
+	}
+
 	@EventHandler(priority=EventPriority.HIGHEST)
 	public void onPlayerJoin(PlayerJoinEvent e) {
 		User u = db.getUser(e.getPlayer());
@@ -41,7 +58,7 @@ public class ToDWhitelist extends JavaPlugin implements Listener {
 			e.getPlayer().kickPlayer(getConfig().getString("kickmessage"));
 		}
 	}
-	
+
 	@EventHandler(priority=EventPriority.HIGHEST)
 	public void onPlayerChangedWorld(PlayerChangedWorldEvent e) {
 		User u = db.getUser(e.getPlayer());
@@ -50,4 +67,16 @@ public class ToDWhitelist extends JavaPlugin implements Listener {
 		}
 	}
 	
+	public Database getToDDatabase() {
+		return db;
+	}
+
+	public static Database getStaticDatabase() {
+		return db;
+	}
+
+	public static Logger getStaticLogger() {
+		return logger;
+	}
+
 }
