@@ -1,6 +1,37 @@
 name: ToDWhitelist
-mainclass: com.talesofdertinia.ToDWhitelist.ToDWhitelist
+author: Johan "Zephyyrr" Fogelstrom
+main: com.talesofdertinia.ToDWhitelist.ToDWhitelist
+version: 1.0
+website: http://www.talesofdertinia.com
+description: User Control Plugin for ToD.
+database: true
 
 commands:
-  whitelist:
-    usage: /whitelist [add|remove]<player>
+  usercontrol:
+    usage: /usercontrol (whitelist|blacklist) (add|remove) <player>
+    permission: todwhitelist.usercontrol
+
+  invite:
+    usage: /invite <playername> <e-mail>
+    permision: todwhitelist.invite
+
+permissions:
+  todwhitelist.usercontrol:
+    description: Allows control of user access
+    default: op
+    children:
+      usercontrol.whitelist: true
+      usercontrol.blacklist: true
+
+  todwhitelist.usercontrol.whitelist:
+    description: Allows control of whitelist
+    default: op
+
+  todwhitelist.usercontrol.blacklist:
+    description: Allows control of blacklist
+    default: op
+
+  todwhitelist.invite:
+    description: Makes the invite system of ToDWhitelist to be used.
+    default: false
+
