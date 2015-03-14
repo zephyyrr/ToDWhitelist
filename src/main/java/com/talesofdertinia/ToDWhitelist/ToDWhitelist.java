@@ -5,11 +5,14 @@ import java.util.logging.Logger;
 import com.talesofdertinia.ToDWhitelist.db.*;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -61,8 +64,6 @@ public class ToDWhitelist extends JavaPlugin implements Listener {
 		} catch (Exception e) {
 			getLogger().severe("Unable to establish connection to database.\n" +
 					settings);
-
-			getLogger().severe("Putting server into backup mode");
 			backup_mode();
 		}
 
@@ -73,6 +74,7 @@ public class ToDWhitelist extends JavaPlugin implements Listener {
 	
 	public void normal_mode() {
 		getServer().setWhitelist(false);
+		getLogger().severe("Returned server to normal mode");
 	}
 
 	/**
@@ -80,6 +82,7 @@ public class ToDWhitelist extends JavaPlugin implements Listener {
 	 * 
 	 */
 	public void backup_mode() {
+		getLogger().severe("Putting server into backup mode");
 		getServer().setWhitelist(true);
 	}
 
@@ -90,18 +93,23 @@ public class ToDWhitelist extends JavaPlugin implements Listener {
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST)
-	public void onPlayerJoin(PlayerJoinEvent e) {
-		User u = db.getUser(e.getPlayer());
+	public void onPlayerJoin(PlayerLoginEvent e) {
+		Player p = e.getPlayer();
+		User u = db.getUser(p);
 		if (!strategy.isAllowed(u)) {
-			e.getPlayer().kickPlayer(getConfig().getString("kickmessage"));
+			getLogger().info(p.getName() + "was not allowed on the server by the whitelist.");
+			e.setKickMessage(getConfig().getString("kickmessage"));
+			e.disallow(Result.KICK_WHITELIST, getConfig().getString("kickmessage"));
 		}
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST)
 	public void onPlayerChangedWorld(PlayerChangedWorldEvent e) {
-		User u = db.getUser(e.getPlayer());
-		if (!strategy.isAllowed(u, e.getPlayer().getWorld())) {
-			e.getPlayer().kickPlayer(getConfig().getString("kickmessage"));
+		Player p = e.getPlayer();
+		User u = db.getUser(p);
+		if (!strategy.isAllowed(u, p.getWorld())) {
+			getLogger().info(p.getName() + "was not allowed on the server by the whitelist.");
+			p.kickPlayer(getConfig().getString("kickmessage"));
 		}
 	}
 	
