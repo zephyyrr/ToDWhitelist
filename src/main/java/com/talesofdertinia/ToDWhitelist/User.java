@@ -23,20 +23,32 @@ import com.talesofdertinia.ToDWhitelist.User.Status;
 public class User implements Serializable {
 
 	public enum Status {
-		Undecided,
-		Whitelisted,
-		Blacklisted,
-		Trial,
-		Guest;
+		undecided,
+		pending,
+		whitelisted,
+		blacklisted,
+		trial,
+		guest;
 
 		public static Status fromString(String s) {
 			s = s.toLowerCase();
 			switch (s) {
-			case "blacklisted": return Status.Blacklisted;
-			case "guest": return Status.Guest;
-			case "trial": return Status.Trial;
-			case "whitelisted": return Status.Whitelisted;
-			default: return Status.Undecided;
+			case "blacklisted": return Status.blacklisted;
+			case "guest": return Status.guest;
+			case "trial": return Status.trial;
+			case "whitelisted": return Status.whitelisted;
+			default: return Status.pending;
+			}
+		}
+		
+		public String getList() {
+			switch (this) {
+			case blacklisted: return "blacklist";
+			case guest: return "guestlist";
+			case trial: return "triallist";
+			case whitelisted: return "whitelist";
+			case pending: return "list of pending users";
+			default: return "nonexisting list";
 			}
 		}
 	}
@@ -54,7 +66,7 @@ public class User implements Serializable {
 	public User(UUID uuid, Status status) {
 		this.uuid = uuid;
 		this.status = status;
-		this.email = null;
+		this.email = "";
 		this.invites = 0;
 		this.total_invites = 0;
 	}

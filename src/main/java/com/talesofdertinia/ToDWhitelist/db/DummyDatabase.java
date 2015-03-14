@@ -65,4 +65,14 @@ public class DummyDatabase implements Database {
 		return true;
 	}
 
+	@Override
+	public boolean isConnected() {
+		return true;
+	}
+
+	@Override
+	public void reconnect() throws Exception {
+		
+	}
+
 }

@@ -10,7 +10,7 @@ public class WhitelistStrategy implements Strategy {
 	 * {@inheritDoc}
 	 */
 	public boolean isAllowed(User user) {
-		if (user.getStatus() == Status.Whitelisted) {
+		if (user.getStatus() == Status.whitelisted) {
 			return true;
 		} else if (user.getPlayer().isOp()) {
 			ToDWhitelist.getStaticLogger().warning("Non-whitelisted Op joined. Remember to register all ops in whitelist or deop if no longer welcome.");
@@ -27,7 +27,7 @@ public class WhitelistStrategy implements Strategy {
 	public Status getInviteStatus() {
 		//FIXME Perhaps move into separate class or passed as constructor parameter.
 		//Default behaviour Assume good.
-		return Status.Whitelisted;
+		return Status.whitelisted;
 	}
 
 }

@@ -3,6 +3,7 @@ package com.talesofdertinia.ToDWhitelist;
 import java.util.Date;
 
 import com.talesofdertinia.ToDWhitelist.ToDWhitelist;
+import com.talesofdertinia.ToDWhitelist.User.Status;
 import com.talesofdertinia.ToDWhitelist.db.Database;
 
 import org.bukkit.OfflinePlayer;
@@ -15,11 +16,13 @@ import org.bukkit.entity.Player;
 
 public class InviteCommand implements CommandExecutor {
 
+	ToDWhitelist pl;
 	Database db;
 	Inviter inviter;
 	Server srv;
 
 	public InviteCommand(ToDWhitelist pl) {
+		this.pl = pl;
 		db = pl.getToDDatabase();
 		srv = pl.getServer();
 		FileConfiguration conf = pl.getConfig();
@@ -30,6 +33,8 @@ public class InviteCommand implements CommandExecutor {
 		settings.port = (short) conf.getInt("mail.port");
 		
 		Emailer em = new Emailer(settings);
+		pl.getLogger().info("Loading email subject: " + conf.getString("mail.subject"));
+		pl.getLogger().info("Loading email message: " + conf.getString("mail.message"));
 		inviter = new EmailInviter(db, em, conf.getString("mail.subject"), conf.getString("mail.message"));
 	}
 
@@ -51,18 +56,26 @@ public class InviteCommand implements CommandExecutor {
 		//But I need to convert a name from a user to a UUID at some point.
 		//The option would be to perform the query myself. Not nice.
 		@SuppressWarnings("deprecation")
-		OfflinePlayer invitee = srv.getOfflinePlayer(inviteeName);
+		User invited = new User(srv.getOfflinePlayer(inviteeName).getUniqueId(), Status.whitelisted, email, 0, 0);
 		
 		//TODO figure out if there is a tell of non-existing players.
 
 		if (sender instanceof Player) {
 			User u = db.getUser((Player) sender);
-			Invite invite = new Invite(u.uuid, invitee.getUniqueId(), 
+			Invite invite = new Invite(u, invited, 
 					new Date() , false, false);
 			if (u.getInvites() > 0) {
+				if (!db.insert(invited)) {
+					sender.sendMessage("That person is already invited!");
+					return true;
+				}
+				
 				u.useInvite();
-				db.update(u);
-				inviter.invite(invite);
+				
+				srv.getScheduler().runTaskAsynchronously(pl, () -> {
+					db.update(u);
+					inviter.invite(invite);
+				});
 			} else {
 				//Not enough invites left
 				sender.sendMessage("Not enough invites left.");

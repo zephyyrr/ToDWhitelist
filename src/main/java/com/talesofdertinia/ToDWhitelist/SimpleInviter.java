@@ -12,9 +12,6 @@ public class SimpleInviter implements Inviter {
 
 	@Override
 	public boolean invite(Invite invite) {
-		if (!db.insert(invite.getInvited())) {
-			return false;
-		}
 		return db.insert(invite);
 	}
 

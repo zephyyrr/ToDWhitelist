@@ -10,6 +10,9 @@ import com.talesofdertinia.ToDWhitelist.User;
 import com.talesofdertinia.ToDWhitelist.User.Status;
 
 public interface Database {
+	public boolean isConnected();
+	public void reconnect() throws Exception;
+	
 	public User getUser(UUID uuid);
 	public User getUser(OfflinePlayer player);
 	public boolean insert(User user);

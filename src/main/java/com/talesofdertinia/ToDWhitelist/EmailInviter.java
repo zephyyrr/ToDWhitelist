@@ -24,12 +24,16 @@ public class EmailInviter extends SimpleInviter {
 	public boolean invite(Invite invite) {
 		if (super.invite(invite)) {
 			try {
+				User invited = invite.getInvited();
+				String invitedName = invited.getPlayer().getName();
+				
 				String local_message = message;
 				local_message = local_message.replaceAll("%inviter%", invite.getInviter().getPlayer().getName());
-				local_message = local_message.replaceAll("%invited%", invite.getInvited().getPlayer().getName());
+				local_message = local_message.replaceAll("%invited%", invitedName);
 				
 				
 				em.send(invite.getInvited().getEmail(), subject, local_message);
+				ToDWhitelist.getStaticLogger().info("Sent email to " + invited.getEmail() + " inviting "+ invitedName);
 			} catch (MessagingException e) {
 				ToDWhitelist.getStaticLogger().severe(e.getMessage());
 				return false;

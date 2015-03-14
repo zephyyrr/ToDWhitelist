@@ -7,29 +7,22 @@ description: User Control Plugin for ToD.
 database: true
 
 commands:
-  usercontrol:
-    usage: /usercontrol (whitelist|blacklist) (add|remove) <player>
-    permission: todwhitelist.usercontrol
+  todwhitelist:
+    usage: /todwhitelist ((whitelist|blacklist) (add|remove) <player> | backupmode (enable|disable))
+    permission: todwhitelist.admin
+    aliases: [wl,bl]
 
   invite:
     usage: /invite <playername> <e-mail>
     permision: todwhitelist.invite
 
 permissions:
-  todwhitelist.usercontrol:
+  todwhitelist.admin:
     description: Allows control of user access
     default: op
     children:
       usercontrol.whitelist: true
       usercontrol.blacklist: true
-
-  todwhitelist.usercontrol.whitelist:
-    description: Allows control of whitelist
-    default: op
-
-  todwhitelist.usercontrol.blacklist:
-    description: Allows control of blacklist
-    default: op
 
   todwhitelist.invite:
     description: Makes the invite system of ToDWhitelist to be used.

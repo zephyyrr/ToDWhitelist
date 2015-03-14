@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.entity.Player;
@@ -21,7 +22,7 @@ import com.talesofdertinia.ToDWhitelist.User;
 import com.talesofdertinia.ToDWhitelist.User.Status;
 
 public class MySqlDatabase implements Database {
-	
+
 	public static UUID deformat(String uuid) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(uuid.subSequence(0, 8));
@@ -36,10 +37,13 @@ public class MySqlDatabase implements Database {
 
 		return UUID.fromString(sb.toString());
 	}
+
 	public static String format(UUID uuid) {
 		return uuid.toString().replaceAll("-", "");
 	}
+
 	Plugin pl;
+	Settings s;
 	Connection conn;
 	PreparedStatement user_query;
 
@@ -49,11 +53,33 @@ public class MySqlDatabase implements Database {
 	PreparedStatement invite_query_all;
 
 	PreparedStatement invite_insert;
-
 	PreparedStatement invite_update;
 
 	public MySqlDatabase(Plugin plugin, Settings s) throws SQLException {
 		pl = plugin;
+		this.s = s;
+		try {
+			reconnect();
+		} catch (SQLException e) {
+			throw e;
+		} catch (Exception e) {
+			pl.getLogger().severe(e.getMessage());
+		}
+	}
+	
+	public boolean isConnected() {
+		try {
+			return conn.isValid(2);
+		} catch (SQLException e) {
+			return false;
+		}
+	}
+	
+	public void reconnect() throws Exception {
+		if (conn != null && !conn.isClosed()) {
+			conn.close();
+		}
+		
 		conn = DriverManager.getConnection(s.location, s.username, s.password);
 
 		user_query = conn
@@ -62,7 +88,7 @@ public class MySqlDatabase implements Database {
 		user_insert = conn
 				.prepareStatement("INSERT INTO "
 						+ s.table
-						+ " VALUES uuid=?, email=?, state=?, availableInvites=?, totalInvites=?;");
+						+ "(uuid,email,state,availableInvites,totalInvites) VALUES (?,?,?,?,?);");
 		user_update = conn
 				.prepareStatement("UPDATE "
 						+ s.table
@@ -75,7 +101,7 @@ public class MySqlDatabase implements Database {
 						+ "WHERE invites.recruitedUUID=?;");
 		invite_query_all = conn.prepareStatement("");
 		invite_insert = conn
-				.prepareStatement("INSERT INTO wp_tod_user_recruitment VALUES recruitedUUID=?, id=(SELECT id FROM wp_tod_user_data WHERE uuid=?);");
+				.prepareStatement("INSERT INTO wp_tod_user_recruitment(recruitedUUID,id) VALUES (?,(SELECT id FROM wp_tod_user_data WHERE uuid=?));");
 		invite_update = conn
 				.prepareStatement("UPDATE wp_tod_user_recruitment SET recruitedGotReward=?, recruiterGotReward=? WHERE recruitedUUID=?");
 	}
@@ -88,6 +114,7 @@ public class MySqlDatabase implements Database {
 			conn.close();
 		} catch (SQLException e) {
 			// Notify user of error and move on.
+			pl.getLogger().severe(e.getMessage());;
 			e.printStackTrace();
 			return;
 		}
@@ -104,7 +131,7 @@ public class MySqlDatabase implements Database {
 						.getTime()), rs.getBoolean(3), rs.getBoolean(2));
 			}
 		} catch (SQLException e) {
-			ToDWhitelist.getStaticLogger().severe(e.getMessage());
+			pl.getLogger().severe(e.getMessage());
 		}
 		return null;
 	}
@@ -124,15 +151,18 @@ public class MySqlDatabase implements Database {
 			user_query.setString(1, format(uuid));
 			ResultSet rs = user_query.executeQuery();
 			if (rs.next()) {
-				return new User(uuid, Status.fromString(rs.getString(1)));
+				Status status = Status.fromString(rs.getString("state"));
+				String email = rs.getString("email");
+				int invites = rs.getInt("availableInvites");
+				int total_invites = rs.getInt("totalInvites");
+				return new User(uuid, status, email, invites, total_invites);
 			}
 		} catch (SQLException e) {
-			ToDWhitelist.getStaticLogger().severe(e.getMessage());
+			pl.getLogger().severe(e.getMessage());
 		}
-		// Fallback to a default behaviour.
-		return new User(uuid, Status.Undecided);
+		// Fallback to a default behaviour.	
+		return new User(uuid, Status.undecided);
 	}
-
 	@Override
 	public boolean insert(Invite invite) {
 		// "INSERT INTO wp_tod_user_recruitment VALUES recruitedUUID=?, id=(SELECT id FROM wp_tod_user_data WHERE uuid=?);"
@@ -141,7 +171,7 @@ public class MySqlDatabase implements Database {
 			invite_insert.setString(2, format(invite.getInviter().getUUID()));
 			return invite_insert.executeUpdate() > 0;
 		} catch (SQLException e) {
-			ToDWhitelist.getStaticLogger().severe(e.getMessage());
+			pl.getLogger().severe(e.getMessage());
 		}
 		return false;
 	}
@@ -157,7 +187,7 @@ public class MySqlDatabase implements Database {
 
 			return user_insert.executeUpdate() > 0;
 		} catch (SQLException e) {
-			ToDWhitelist.getStaticLogger().severe(e.getMessage());
+			pl.getLogger().severe(e.getMessage());
 			return false;
 		}
 
@@ -165,14 +195,14 @@ public class MySqlDatabase implements Database {
 
 	@Override
 	public boolean update(Invite invite) {
-		//"UPDATE wp_tod_user_recruitment SET recruitedGotReward=?, recruiterGotReward=? WHERE recruitedUUID=?"
+		// "UPDATE wp_tod_user_recruitment SET recruitedGotReward=?, recruiterGotReward=? WHERE recruitedUUID=?"
 		try {
 			invite_update.setString(3, format(invite.getInvited().getUUID()));
 			invite_update.setBoolean(1, invite.isInvitedRewarded());
 			invite_update.setBoolean(2, invite.isInviterRewarded());
 			return invite_update.executeUpdate() > 0;
 		} catch (SQLException e) {
-			ToDWhitelist.getStaticLogger().severe(e.getMessage());
+			pl.getLogger().severe(e.getMessage());
 			return false;
 		}
 
@@ -189,7 +219,7 @@ public class MySqlDatabase implements Database {
 
 			return user_update.executeUpdate() > 0;
 		} catch (SQLException e) {
-			ToDWhitelist.getStaticLogger().severe(e.getMessage());
+			pl.getLogger().severe(e.getMessage());
 			return false;
 		}
 	}
